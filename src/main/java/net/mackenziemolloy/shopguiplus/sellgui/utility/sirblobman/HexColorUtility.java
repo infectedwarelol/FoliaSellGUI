@@ -5,21 +5,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jetbrains.annotations.NotNull;
-
-import net.md_5.bungee.api.ChatColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.jetbrains.annotations.NotNull;
 
 public final class HexColorUtility {
 
     private static final Map<Character, Pattern> KNOWN_PATTERN_MAP = new ConcurrentHashMap<>();
+    private static final Pattern LEGACY_COLOR_PATTERN = Pattern.compile("[&§][0-9a-fA-FkKlLmMnNoOrRxX]");
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("[&§]#([0-9a-fA-F]){6}");
 
-    /**
-     * @param colorChar The character that will be used for color codes (usually {@code '&'})
-     * @param string    The {@link String} that will have its values replaced.
-     * @return A new {@link String} with the hex color codes being replaced.
-     */
+    private HexColorUtility() {
+        throw new UnsupportedOperationException();
+    }
+
     public static @NotNull String replaceHexColors(char colorChar, @NotNull String string) {
         Pattern pattern = getReplaceAllRgbPattern(colorChar);
         Matcher matcher = pattern.matcher(string);
@@ -32,67 +31,48 @@ public final class HexColorUtility {
             }
 
             try {
-                String hexCodeString = matcher.group(2);
-                String hexCode = parseHexColor(hexCodeString);
+                String hexCode = parseHexColor(matcher.group(2));
                 matcher.appendReplacement(buffer, hexCode);
             } catch (NumberFormatException ignored) {
-                // Ignored Exception
             }
         }
 
         matcher.appendTail(buffer);
 
-        // Normalize Adventure legacy serializers so that colors reset styles (bold/italic/etc.)
         Component component = LegacyComponentSerializer.legacyAmpersand().deserialize(buffer.toString());
         return LegacyComponentSerializer.legacySection().serialize(component);
     }
 
-    private static Pattern getReplaceAllRgbPattern(char colorChar) {
-        if (KNOWN_PATTERN_MAP.containsKey(colorChar)) {
-            return KNOWN_PATTERN_MAP.get(colorChar);
-        }
+    public static @NotNull String purgeAllColor(@NotNull String input) {
+        String withoutHex = HEX_COLOR_PATTERN.matcher(input).replaceAll("");
+        return LEGACY_COLOR_PATTERN.matcher(withoutHex).replaceAll("");
+    }
 
-        String colorCharString = Character.toString(colorChar);
-        String colorCharPattern = Pattern.quote(colorCharString);
-
-        String patternString = ("(" + colorCharPattern + ")?" + colorCharPattern + "#([0-9a-fA-F]{6})");
-        Pattern pattern = Pattern.compile(patternString);
-        KNOWN_PATTERN_MAP.put(colorChar, pattern);
-        return pattern;
+    private static @NotNull Pattern getReplaceAllRgbPattern(char colorChar) {
+        return KNOWN_PATTERN_MAP.computeIfAbsent(colorChar, character -> {
+            String colorCharPattern = Pattern.quote(Character.toString(character));
+            return Pattern.compile("(" + colorCharPattern + ")?" + colorCharPattern + "#([0-9a-fA-F]{6})");
+        });
     }
 
     private static @NotNull String parseHexColor(@NotNull String string) throws NumberFormatException {
-        if (string.startsWith("#")) {
-            string = string.substring(1);
-        }
-
-        if (string.length() != 6) {
+        String value = (string.startsWith("#") ? string.substring(1) : string);
+        if (value.length() != 6) {
             throw new NumberFormatException("Invalid hex length!");
         }
 
-        int colorInt = Integer.decode("#" + string);
+        int colorInt = Integer.decode("#" + value);
         if (colorInt < 0x000000 || colorInt > 0xFFFFFF) {
             throw new NumberFormatException("Invalid hex color value!");
         }
 
         StringBuilder assembled = new StringBuilder();
-        assembled.append(ChatColor.COLOR_CHAR);
-        assembled.append("x");
+        assembled.append(MessageUtility.COLOR_CHAR).append('x');
 
-        char[] charArray = string.toCharArray();
-        for (char character : charArray) {
-            assembled.append(ChatColor.COLOR_CHAR);
-            assembled.append(character);
+        for (char character : value.toCharArray()) {
+            assembled.append(MessageUtility.COLOR_CHAR).append(character);
         }
 
         return assembled.toString();
-    }
-
-    public static String purgeAllColor(String input) {
-        // Remove Minecraft color codes (e.g., &7)
-        String noMinecraftColorCodes = input.replaceAll("[&§][0-9a-fA-FkKlLnNoOrR]", "");
-
-        // Remove hex color codes (e.g., &#FFFF0)
-        return noMinecraftColorCodes.replaceAll("[&§]#([0-9a-fA-F]){6}", "");
     }
 }

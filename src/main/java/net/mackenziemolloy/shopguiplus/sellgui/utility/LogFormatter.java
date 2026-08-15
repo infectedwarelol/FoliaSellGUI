@@ -1,25 +1,37 @@
 package net.mackenziemolloy.shopguiplus.sellgui.utility;
 
-import net.mackenziemolloy.shopguiplus.sellgui.SellGUI;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
-public class LogFormatter extends Formatter {
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-  private final DateFormat dateFormat = new SimpleDateFormat(Objects.requireNonNull(SellGUI.getInstance().getConfiguration().getString("options.transaction_log.date_format")));
+public final class LogFormatter extends Formatter {
 
-  @Override
-  public String format(LogRecord logRecord) {
-    return getDateAndTime() + " " + logRecord.getMessage() + "\n";
-  }
+    private static final String DEFAULT_PATTERN = "yyyy/MM/dd HH:mm:ss";
 
-  private String getDateAndTime() {
-    Date date = new Date();
-    return dateFormat.format(date);
-  }
+    private final DateTimeFormatter dateFormatter;
+
+    public LogFormatter(@Nullable String pattern) {
+        this.dateFormatter = createFormatter(pattern);
+    }
+
+    @Override
+    public @NotNull String format(@NotNull LogRecord logRecord) {
+        return this.dateFormatter.format(LocalDateTime.now()) + " " + logRecord.getMessage() + System.lineSeparator();
+    }
+
+    private static @NotNull DateTimeFormatter createFormatter(@Nullable String pattern) {
+        if (pattern != null && !pattern.isBlank()) {
+            try {
+                return DateTimeFormatter.ofPattern(pattern, Locale.US);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        return DateTimeFormatter.ofPattern(DEFAULT_PATTERN, Locale.US);
+    }
 }

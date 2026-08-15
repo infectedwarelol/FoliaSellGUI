@@ -4,45 +4,46 @@ plugins {
 }
 
 group 'net.mackenziemolloy.shopguiplus.sellgui'
-version '1.1.8'
+version '1.2.0'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
-
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = sourceCompatibility
 }
 
 repositories {
-	mavenLocal()
+    mavenLocal()
     mavenCentral()
 
     maven { url = 'https://repo.papermc.io/repository/maven-public/' }
-    maven { url = "https://repo.mattstudios.me/artifactory/public/" }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url = 'https://repo.codemc.org/repository/maven-public/' }
     maven { url = 'https://jitpack.io/' }
-    maven { url = "https://repo.tcoded.com/releases"}
 }
 
 dependencies {
-    compileOnly "org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT"
+    compileOnly "io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT"
     compileOnly 'com.github.brcdev-minecraft:shopgui-api:3.0.0'
-    implementation "dev.triumphteam:triumph-gui:3.1.13"
     implementation 'org.bstats:bstats-bukkit:3.1.0'
-    implementation "com.tcoded:FoliaLib:0.5.1"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+    options.compilerArgs << '-Xlint:all,-processing,-serial'
+}
+
+processResources {
+    filesMatching('plugin.yml') {
+        expand('version': project.version)
+    }
 }
 
 shadowJar {
-    relocate "dev.triumphteam.gui", "net.mackenziemolloy.shopguiplus.sellgui"
-    relocate "org.bstats", "net.mackenziemolloy.shopguiplus.sellgui.bstats"
-    relocate "com.tcoded.folialib", "net.mackenziemolloy.shopguiplus.sellgui.lib.folialib"
+    relocate "org.bstats", "net.mackenziemolloy.shopguiplus.sellgui.lib.bstats"
 
-    minimize {
-        exclude(dependency("com.tcoded:FoliaLib:.*"))
-    }
+    minimize()
 }
 
 tasks.build.dependsOn tasks.shadowJar

@@ -52,6 +52,11 @@ options:
   abbreviate_numbers: false
 
   #
+  # Should the plugin check SpigotMC for a newer release on startup?
+  #
+  update_check: true
+
+  #
   # Sounds that are played during certain events
   #
   sounds:
@@ -61,18 +66,20 @@ options:
     volume: 1
     events:
       # If you don't want a certain event to have a sound, just set to an invalid value
-      # NOTE: THESE DEFAULT VALUES ARE FOR 1.13+ AND MUST USE _ (underscore) INSTEAD OF . (dot)
+      # Both the old constant style (BLOCK_CHEST_OPEN) and the namespaced key style
+      # (minecraft:block.chest.open) are accepted.
       open: BLOCK_CHEST_OPEN
       success: ENTITY_VILLAGER_CELEBRATE
       failed: ENTITY_VILLAGER_HURT
 
   #
-  # Action Bar Messages only work on versions 1.9+
+  # Action Bar Messages
   #
   action_bar_msgs: true
 
   #
-  # Only relevent in versions prior to 1.13, basically do you want trialing ":(NUMBER)" on item lists (IE: "STONE:2")
+  # Legacy option kept for configuration compatibility. Item damage values were
+  # removed from Minecraft in 1.13, so this no longer has any effect.
   #
   show_item_damage: true
 
@@ -83,12 +90,56 @@ options:
   rows: 6
 
   #
+  # Shulker box selling.
+  #
+  # When enabled, placing a shulker box into the Sell GUI sells the box as a
+  # single unit: every sellable item stored inside it is valued using the price
+  # ShopGUIPlus has configured for that item, the box is consumed, and the player
+  # is paid the combined total. The contents are never handed to the player and
+  # are never sold as separate loose items.
+  #
+  shulker:
+    # Should shulker boxes be valued by their contents at all?
+    # When false, shulker boxes are priced exactly like any other item.
+    enabled: true
+
+    # Should the configured shop price of the empty shulker box itself be added
+    # to the total? Only applies when the box is fully consumed.
+    include_container_price: true
+
+    # How deep nested shulker boxes are followed. 1 means "only the box that was
+    # placed in the GUI", 2 means "that box and boxes stored inside it", etc.
+    # Nesting is not possible in vanilla, so this only matters for boxes created
+    # with commands or custom items.
+    max_depth: 3
+
+    # Safety limit on how many item stacks a single sell may inspect. Sales that
+    # exceed this limit leave the remaining boxes untouched instead of stalling
+    # the server.
+    max_scanned_items: 4096
+
+    # What happens to items inside the box that ShopGUIPlus has no sell price for.
+    #   KEEP_ITEMS  - the sellable items are paid for and the box is returned to
+    #                 the player containing only the unsellable leftovers.
+    #   RETURN_BOX  - the box is not sold at all and is returned untouched.
+    #   DISCARD     - the box and everything left inside it are consumed.
+    unsellable_contents: KEEP_ITEMS
+
+    # How sold shulker boxes appear on the receipt.
+    #   SUMMARY  - one line per box, showing the total the box was worth.
+    #   DETAILED - one line per item type that was inside the box.
+    receipt_mode: SUMMARY
+
+    # Should players be shown an estimated value when they place a shulker box
+    # into the Sell GUI?
+    show_estimate: true
+
+  #
   # Similar to the SGP Item format: (EXAMPLE)
   # 1:
   #   type: dummy <--- Not required, but may become applicable in future updates I make
   #   item:
   #     material: STONE
-  #     damage: 1 <--- Only use if you're running 1.12 or below
   #     quantity: 1
   #     name: "&7Cool name"
   #     lore:
@@ -135,3 +186,22 @@ messages:
   # {earning} - returns the total amount made
   #
   action_bar_items_sold: "&aShop > &fYou sold &a{amount} &fitems in this batch."
+  #
+  # Shown when a player places a shulker box into the Sell GUI.
+  # {item} - the name of the shulker box
+  # {price} - the estimated value of the box
+  # {amount} - how many items are stored inside it
+  #
+  shulker_estimate: "&aShop > &fThat &a{item}&f is worth roughly &a{price}&f (&a{amount}&f items inside)."
+  #
+  # Shown when a shulker box was sold but held items ShopGUIPlus cannot buy.
+  #
+  shulker_leftovers: "&aShop > &fItems that couldn't be sold were left inside your shulker box."
+  #
+  # Shown when the economy refused the payout. Items are always returned first.
+  #
+  transaction_failed: "&cShop > &fYour sale could not be completed, so your items were returned."
+  #
+  # Shown when ShopGUIPlus has not finished loading the player's data yet.
+  #
+  shop_not_ready: "&aShop > &fThe shop is still loading, please try again in a moment."
