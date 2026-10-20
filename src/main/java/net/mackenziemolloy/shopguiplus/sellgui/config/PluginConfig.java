@@ -86,7 +86,7 @@ public final class PluginConfig {
         this.rows = (configuredRows < 1 || configuredRows > 6) ? 6 : configuredRows;
 
         this.numberFormatter = new NumberFormatter(configuration.getBoolean("options.rounded_pricing", false),
-                configuration.getBoolean("options.remove_trailing_zeros", false),
+                configuration.getBoolean("options.remove_trailing_zeros", true),
                 configuration.getBoolean("options.abbreviate_numbers", false));
 
         Map<String, String> messageMap = new HashMap<>();

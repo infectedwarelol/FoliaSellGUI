@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import net.brcdev.shopgui.provider.economy.EconomyProvider;
 import net.brcdev.shopgui.shop.item.ShopItem;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.title.Title;
 import net.mackenziemolloy.shopguiplus.sellgui.config.PluginConfig;
@@ -36,8 +37,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class SellTransactionService {
-
-    private static final String RESET = "§r";
 
     private final Supplier<PluginConfig> configSupplier;
     private final ShopService shopService;
@@ -333,11 +332,14 @@ public final class SellTransactionService {
         }
 
         if (hasReceiptText) {
-            String hoverText = this.messages.legacy("receipt_title", null) + RESET
-                    + String.join("\n", receiptLines) + RESET;
+            TextComponent.Builder hoverText = Component.text()
+                    .append(Colors.fromLegacy(this.messages.legacy("receipt_title", null)));
+            for (String receiptLine : receiptLines) {
+                hoverText.append(Component.newline()).append(Colors.fromLegacy(receiptLine));
+            }
 
             Component receipt = this.messages.component("receipt_text", null)
-                    .hoverEvent(HoverEvent.showText(Colors.fromLegacy(hoverText)));
+                    .hoverEvent(HoverEvent.showText(hoverText.build()));
 
             message = (message == null ? receipt : message.append(Component.space()).append(receipt));
         }

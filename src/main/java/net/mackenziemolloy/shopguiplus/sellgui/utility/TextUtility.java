@@ -35,16 +35,26 @@ public final class TextUtility {
 
     public static @NotNull String itemName(@NotNull ItemStack item) {
         ItemMeta meta = item.getItemMeta();
-        if (meta != null && meta.hasDisplayName()) {
-            Component displayName = meta.displayName();
-            if (displayName != null) {
-                String legacy = LegacyComponentSerializer.legacySection().serialize(displayName);
-                if (!legacy.isEmpty()) {
-                    return legacy;
+        if (meta != null) {
+            if (meta.hasDisplayName()) {
+                String displayName = toLegacy(meta.displayName());
+                if (!displayName.isEmpty()) {
+                    return displayName;
+                }
+            }
+
+            if (meta.hasItemName()) {
+                String itemName = toLegacy(meta.itemName());
+                if (!itemName.isEmpty()) {
+                    return itemName;
                 }
             }
         }
 
         return materialName(item.getType());
+    }
+
+    private static @NotNull String toLegacy(Component component) {
+        return component == null ? "" : LegacyComponentSerializer.legacySection().serialize(component);
     }
 }
