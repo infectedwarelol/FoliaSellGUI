@@ -38,3 +38,5 @@ sellgui.reload grants the user access to reload the configuration
 - [Installation](https://github.com/MackenzieMolloy/ShopGUIPlus-SellGUI/wiki/Installation)
 - [Configuration](https://github.com/MackenzieMolloy/ShopGUIPlus-SellGUI/wiki/Configuration)
 - [Getting Support](https://github.com/MackenzieMolloy/ShopGUIPlus-SellGUI/wiki/Getting-Support)
+
+😉
